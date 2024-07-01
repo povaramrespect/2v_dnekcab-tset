@@ -17,6 +17,16 @@ def store_dumps(urls):
 
         print("Data successfully loaded and saved to database.")
 
+        driver.create_indexes()
+
+        print("Created indexes")
+
+        driver.relationships()
+
+        print("Created relationships")
+
+        db.close()
+
     except Exception as e:
         print(f"Error: {e}")
 

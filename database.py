@@ -78,7 +78,7 @@ class DataManager:
             WHERE a.address = o.recipient 
             WITH a, o
             WHERE o IS NOT NULL
-            MERGE (a)-[:OUTPUT_TRANSACTION]->(o)
+            MERGE (a)-[:OUTPUT_TRANSACTION]->(o);
             """,
             """
             MATCH (a:addresses) 
@@ -86,7 +86,7 @@ class DataManager:
             WHERE a.address = i.recipient 
             WITH a, i
             WHERE i IS NOT NULL
-            MERGE (a)-[:INPUT_TRANSACTION]->(i)
+            MERGE (a)-[:INPUT_TRANSACTION]->(i);
         """]
         with self.driver.session() as session:
             for query in queries:
@@ -103,3 +103,11 @@ class DataManager:
                 message.append(record)
                 
         return message
+
+    def create_indexes(self):
+        queries = ["CREATE INDEX FOR (o:outputs) ON (o.recipient);",
+                   "CREATE INDEX FOR (a:addresses) ON (a.address);"]
+        with self.driver.session() as session:
+            for query in queries:
+                session.run(query)
+        

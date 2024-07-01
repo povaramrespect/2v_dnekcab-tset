@@ -6,8 +6,8 @@ router = APIRouter()
 
 db = Database(address, keys)
 
-@router.post("/address_info/{address}")
-async def show_address_info(address):
+@router.post("/address_transactions/{address}")
+async def show_address_transactions(address):
     try:
         db.connect()
         driver = DataManager(db.driver)
@@ -21,23 +21,9 @@ async def show_address_info(address):
         return result
     else:
         return {"message": f"Transactions with address {address} not found."}
-
-@router.post("/relationships")
-async def find_relationships():
-    try:
-        db.connect()
-        driver = DataManager(db.driver)
-        driver.relationships()
-        db.close()
-
-    except Exception as e:
-        return {"error": str(e)} 
-    
-    return {"message": f"Nodes relationships updated"}
         
-    
 @router.get("/db")
-async def show_db():
+async def show_db_name():
     db.connect()
     driver = DataManager(db.driver)
     message = driver.db_show()
