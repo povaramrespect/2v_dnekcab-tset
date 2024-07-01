@@ -72,21 +72,25 @@ class DataManager:
         return nodes
 
     def relationships(self):
-        query = """
-            MATCH (a:addresses)
-            OPTIONAL MATCH (i:inputs)
-            WHERE a.address = i.recipient
-            MERGE (a)-[:RECEIVED]->(i)
+        queries = ["""
+            MATCH (a:addresses) 
+            OPTIONAL MATCH (o:outputs) 
+            WHERE a.address = o.recipient 
+            WITH a, o
+            WHERE o IS NOT NULL
+            MERGE (a)-[:OUTPUT_TRANSACTION]->(o)
+            """,
+            """
+            MATCH (a:addresses) 
+            OPTIONAL MATCH (i:inputs) 
+            WHERE a.address = i.recipient 
             WITH a, i
-            OPTIONAL MATCH (o:outputs)
-            WHERE a.address = o.recipient
-            MERGE (a)-[:SENT]->(o)
-            WITH a, i, o
-            RETURN a, i, o
-        """
-
+            WHERE i IS NOT NULL
+            MERGE (a)-[:INPUT_TRANSACTION]->(i)
+        """]
         with self.driver.session() as session:
-            session.run(query)
+            for query in queries:
+                session.run(query)
 
 
     
