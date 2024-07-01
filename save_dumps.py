@@ -13,17 +13,16 @@ def store_dumps(urls):
             data = get_dump(f'{url}')
             driver.load_data(data)
 
-        db.close()  
-
         print("Data successfully loaded and saved to database.")
 
-        driver.create_indexes()
+        try:
+            driver.create_indexes()
 
-        print("Created indexes")
+        except Exception:
+            driver.drop_indexes()
+            driver.create_indexes()
 
         driver.relationships()
-
-        print("Created relationships")
 
         db.close()
 

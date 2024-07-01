@@ -24,8 +24,9 @@ class Database:
 
 
 class DataManager:
-    def __init__(self, driver) -> None:  
+    def __init__(self, driver, batch_size=1000) -> None:  
         self.driver = driver
+        self.batch_size = batch_size
 
     def create_node(self, nodes):
         try:
@@ -42,9 +43,8 @@ class DataManager:
 
     def load_data(self, data):
         total_nodes = len(data)
-        batch_size = 1000
-        for i in tqdm(range(0, total_nodes, batch_size), desc="Creating nodes", ncols=100):
-            batch = data[i:i + batch_size]
+        for i in tqdm(range(0, total_nodes, self.batch_size), desc="Creating nodes", ncols=100):
+            batch = data[i:i + self.batch_size]
             nodes = [(item['label'], item['properties']) for item in batch]
             self.create_node(nodes)
 
@@ -67,13 +67,14 @@ class DataManager:
                 }
                 nodes.append(node_data)
 
-        print(nodes)
-
         return nodes
 
     def relationships(self):
-        queries = ["""
-            MATCH (a:addresses) 
+        queries = [
+            """
+            MATCH (a:addresses)
+            WITH a
+            LIMIT {batch_size}
             OPTIONAL MATCH (o:outputs) 
             WHERE a.address = o.recipient 
             WITH a, o
@@ -81,16 +82,21 @@ class DataManager:
             MERGE (a)-[:OUTPUT_TRANSACTION]->(o);
             """,
             """
-            MATCH (a:addresses) 
+            MATCH (a:addresses)
+            WITH a
+            LIMIT {batch_size}
             OPTIONAL MATCH (i:inputs) 
             WHERE a.address = i.recipient 
             WITH a, i
             WHERE i IS NOT NULL
             MERGE (a)-[:INPUT_TRANSACTION]->(i);
-        """]
+            """
+        ]
         with self.driver.session() as session:
             for query in queries:
-                session.run(query)
+                total_addresses = session.run("MATCH (a:addresses) RETURN count(a) AS count").single()["count"]
+                for _ in tqdm(range(0, total_addresses, self.batch_size), desc="Creating relationships", ncols=100):
+                    session.run(query.format(batch_size=self.batch_size))
 
 
     
@@ -105,9 +111,32 @@ class DataManager:
         return message
 
     def create_indexes(self):
-        queries = ["CREATE INDEX FOR (o:outputs) ON (o.recipient);",
-                   "CREATE INDEX FOR (a:addresses) ON (a.address);"]
+        queries = [
+            "CREATE INDEX address_index IF NOT EXISTS FOR (a:addresses) ON (a.address)",
+            "CREATE INDEX output_recipient_index IF NOT EXISTS FOR (o:outputs) ON (o.recipient)",
+            "CREATE INDEX input_recipient_index IF NOT EXISTS FOR (i:inputs) ON (i.recipient)"
+        ]
         with self.driver.session() as session:
             for query in queries:
                 session.run(query)
-        
+
+        print("New indexes have been created.")
+    
+    def drop_indexes(self):
+        drop_index_queries = [
+            "DROP INDEX index_name IF EXISTS"
+            for index_name in self.get_existing_indexes()
+        ]
+        with self.driver.session() as session:
+            for query in drop_index_queries:
+                session.run(query)
+        print("All indexes have been dropped.")
+
+    def get_existing_indexes(self):
+        existing_indexes = []
+        with self.driver.session() as session:
+            result = session.run("SHOW INDEXES")
+            for record in result:
+                index_name = record["name"]
+                existing_indexes.append(index_name)
+        return existing_indexes
