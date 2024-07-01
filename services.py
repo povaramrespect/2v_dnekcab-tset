@@ -1,5 +1,4 @@
 from tqdm import tqdm
-from io import BytesIO
 from urllib import request
 
 import gzip 
