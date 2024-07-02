@@ -4,7 +4,7 @@
 
 **Требования**
 
-    > Python версии 11 или выше
+    > Python версии 3.10 или выше
     > Установленные библиотеки, указанные в requirements.txt (pip install -r requirements.txt)
     > Для подключения к базе данных необходимо указать адрес и данные авторизации в файле config.py:
 
@@ -29,9 +29,10 @@ python save_dumps.py
 
 2. save_dumps.py - Загрузка архивов в базу neo4j
 
--> Указание urls для загрузки в базу (список ссылок на архивы) = ["https://gz.blockchair.com/zcash/inputs/blockchair_zcash_inputs_20240627.tsv.gz",
-        "https://gz.blockchair.com/zcash/outputs/blockchair_zcash_outputs_20240627.tsv.gz",
-        "https://gz.blockchair.com/zcash/addresses/blockchair_zcash_addresses_latest.tsv.gz"]
+-> Указание ссылок для загрузки в базу:
+urls = ["https://gz.blockchair.com/bitcoin/inputs/blockchair_bitcoin_inputs_20240627.tsv.gz",
+        "https://gz.blockchair.com/bitcoin/outputs/blockchair_bitcoin_outputs_20240627.tsv.gz",
+        "https://gz.blockchair.com/bitcoin/addresses/blockchair_bitcoin_addresses_latest.tsv.gz"]
 
 3. Запуск приложения FastAPI, переход по адресу http://127.0.0.1:8000/docs и взаимодействие с эндпоинтом - /address_transactions/{address}"
 для просмотра всех транзакций по кошельку
@@ -39,8 +40,11 @@ python save_dumps.py
 
 **Примечание**
 
-> В прогресс баре Creating nodes:  82%|█████████       | 639/780 
+> 1. В прогресс баре Creating nodes:  82%|█████████       | 639/780 
 > За 1 итерацию создается value - batch_size узлов
 
-> -В файле database.py на 27 строке в классе DataManager задается значение переменной batch_size = 1000. 
-> Для ускорения создания узлов и отношений в базе есть возможность пробовать повышать значение(в зависимости от ресурсов компьютера) для ускорения работы.
+> 2. В database.py на 27 строке задается значение batch_size = 1000. 
+> Для ускорения создания узлов и отношений в базе есть возможность пробовать повышать значение для ускорения создания узлов и отношений.
+
+> 3. На строке 17 в services.py - lines = [f.readline() for _ in range(10000)] стоит ограничение на загрузку только первых 10000 строк, 
+> для загрузки полного архива нужно изменить на lines = f.readlines()

@@ -30,8 +30,9 @@ def store_dumps(urls):
         print(f"Error: {e}")
 
 
-urls = ["https://gz.blockchair.com/zcash/inputs/blockchair_zcash_inputs_20240627.tsv.gz",
-        "https://gz.blockchair.com/zcash/outputs/blockchair_zcash_outputs_20240627.tsv.gz",
-        "https://gz.blockchair.com/zcash/addresses/blockchair_zcash_addresses_latest.tsv.gz"]
+
+urls = ["https://gz.blockchair.com/bitcoin/inputs/blockchair_bitcoin_inputs_20240627.tsv.gz",
+        "https://gz.blockchair.com/bitcoin/outputs/blockchair_bitcoin_outputs_20240627.tsv.gz",
+        "https://gz.blockchair.com/bitcoin/addresses/blockchair_bitcoin_addresses_latest.tsv.gz"]
 
 store_dumps(urls)

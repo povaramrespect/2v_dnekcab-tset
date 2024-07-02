@@ -22,11 +22,3 @@ async def show_address_transactions(address):
     else:
         return {"message": f"Transactions with address {address} not found."}
         
-@router.get("/db")
-async def show_db_name():
-    db.connect()
-    driver = DataManager(db.driver)
-    message = driver.db_show()
-    db.close()
-
-    return message
